@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ひっさんで みる たしざん</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E9F5FA; --grid:#D3E7F0; --ink:#1E2A4A; --sub:#5A6A8A; --card:#FFFFFF;
+  --edge:#1E2A4A; --band:rgba(43,179,232,.09); --accent:#FF5D8F;
+  --c-a:#FF8A3D; --c-b:#2BB3E8; --c-ten:#FFC23C; --c-ans:#4FBF6A;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#13203A; --grid:#1C2D4C; --ink:#EEF3FF; --sub:#9FB0D0; --card:#1A2A48;
+    --edge:#0A1224; --band:rgba(43,179,232,.13); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#13203A; --grid:#1C2D4C; --ink:#EEF3FF; --sub:#9FB0D0; --card:#1A2A48;
+  --edge:#0A1224; --band:rgba(43,179,232,.13); color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;min-height:100%;color:var(--ink);background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  font-family:'M PLUS Rounded 1c','Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic',sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+.app{max-width:560px;margin:0 auto;padding:6px 12px 8px;display:flex;flex-direction:column;align-items:center;gap:7px}
+.head{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%}
+h1{font-family:'Dela Gothic One','Hiragino Sans',sans-serif;font-weight:400;font-size:clamp(13px,4vw,17px);margin:0;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.stage-wrap{position:relative;overflow:hidden;width:min(100%,480px);height:300px}
+.stage{position:absolute;left:0;top:0;width:360px;height:480px;transform-origin:0 0}
+.stage > *{position:absolute;left:0;top:0;will-change:transform,opacity}
+
+.blk{
+  width:64px;height:64px;border-radius:9px;border:3px solid var(--edge);
+  background:var(--c);display:grid;place-items:center;
+  box-shadow:inset 0 7px 0 rgba(255,255,255,.42),inset 0 -8px 0 rgba(0,0,0,.2),inset 7px 0 0 rgba(255,255,255,.12),0 4px 0 var(--edge);
+}
+.blk span{
+  font-family:'Dela Gothic One','Hiragino Sans',sans-serif;font-size:40px;line-height:1;color:#fff;
+  margin-top:-2px;
+  text-shadow:2px 0 0 var(--edge),-2px 0 0 var(--edge),0 2px 0 var(--edge),0 -2px 0 var(--edge),
+    2px 2px 0 var(--edge),-2px 2px 0 var(--edge),2px -2px 0 var(--edge),-2px -2px 0 var(--edge),0 5px 0 var(--edge);
+}
+.ca{--c:var(--c-a)} .cb{--c:var(--c-b)} .cten{--c:var(--c-ten)} .cans{--c:var(--c-ans)}
+.cq{background:transparent;border:3px dashed var(--sub);box-shadow:none}
+.cq span{color:var(--sub);text-shadow:none}
+.sym{font-family:'Dela Gothic One','Hiragino Sans',sans-serif;font-size:46px;line-height:1;color:var(--ink)}
+.bar{height:8px;border-radius:4px;background:var(--ink)}
+.branch{height:5px;border-radius:3px;background:var(--ink);transform-origin:0 50%}
+.band{border-radius:10px;background:var(--band);border:2px dashed rgba(43,179,232,.35)}
+.band b{position:absolute;left:50%;top:-26px;transform:translateX(-50%);white-space:nowrap;font-size:13px;font-weight:800;color:var(--sub)}
+.ring{width:84px;height:84px;border-radius:50%;border:5px solid #FFE27A;box-shadow:0 0 18px #FFD54A,inset 0 0 12px #FFF3B8}
+.spk{width:16px;height:16px;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
+.qf{border:3px dashed var(--sub);border-radius:9px}
+.qm{font-family:'Dela Gothic One','Hiragino Sans',sans-serif;font-size:40px;line-height:1;color:var(--sub)}
+.eq{font-family:'Dela Gothic One','Hiragino Sans',sans-serif;font-size:30px;white-space:nowrap;color:var(--ink)}
+.glow{width:180px;height:104px;border-radius:16px;border:4px solid var(--accent);box-shadow:0 0 0 6px rgba(255,93,143,.18)}
+.px{width:8px;height:8px;border:1.5px solid var(--edge)}
+
+.caption{
+  width:100%;min-height:2.9em;display:grid;place-items:center;text-align:center;
+  padding:5px 10px;border-radius:12px;background:var(--card);border:3px solid var(--ink);
+  font-weight:800;font-size:clamp(16px,4.6vw,21px);line-height:1.3;
+}
+.controls{display:flex;gap:8px;justify-content:center;width:100%}
+.big{
+  font:800 15px 'M PLUS Rounded 1c','Hiragino Maru Gothic ProN',sans-serif;
+  padding:8px 12px;flex:1 1 0;max-width:150px;border-radius:12px;cursor:pointer;white-space:nowrap;
+  border:3px solid var(--ink);background:var(--card);color:var(--ink);box-shadow:0 4px 0 var(--ink);
+}
+.big:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.big:disabled{opacity:.45;cursor:default;transform:none;box-shadow:0 4px 0 var(--ink)}
+.big.stop{background:var(--accent);color:#fff}
+.big.stop.paused{background:#3BC07A}
+.opts{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center}
+.speed{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:800;color:var(--sub)}
+.speed button{font:800 13px 'M PLUS Rounded 1c',sans-serif;padding:4px 10px;border-radius:999px;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.speed button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.tabs{display:flex;gap:0;border:3px solid var(--ink);border-radius:999px;overflow:hidden;flex:none}
+.tabs button{font:800 14px 'M PLUS Rounded 1c',sans-serif;padding:5px 11px;border:0;background:var(--card);color:var(--ink);cursor:pointer;white-space:nowrap}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.pad{width:100%;display:flex;flex-direction:column;gap:6px;align-items:center}
+.pad[hidden]{display:none}
+.keys{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%;max-width:400px}
+.keys button{
+  font:400 22px 'Dela Gothic One','Hiragino Sans',sans-serif;height:42px;border-radius:10px;cursor:pointer;
+  border:3px solid var(--edge);background:var(--c-b);color:#fff;box-shadow:inset 0 5px 0 rgba(255,255,255,.35),0 4px 0 var(--edge);
+  text-shadow:0 2px 0 var(--edge);
+}
+.keys button:active{transform:translateY(3px);box-shadow:inset 0 5px 0 rgba(255,255,255,.35),0 1px 0 var(--edge)}
+.pad button:disabled{opacity:.35;cursor:default;transform:none}
+.padact{display:flex;gap:8px;width:100%;justify-content:center}
+.big.ok{background:#3BC07A;color:#fff}
+.slot{width:42px;height:42px;border:3px dashed var(--accent);border-radius:8px;display:grid;place-items:center;background:var(--card)}
+.slot i{font-style:normal;font-family:'Dela Gothic One','Hiragino Sans',sans-serif;font-size:22px;color:var(--accent)}
+.aslot{width:68px;height:68px;border:3px dashed var(--accent);border-radius:10px;background:rgba(255,93,143,.07)}
+.dim{border-radius:10px;background:rgba(8,14,32,.4)}
+.bigq{font-family:'Dela Gothic One','Hiragino Sans',sans-serif;font-size:160px;line-height:1;color:var(--sub)}
+.wait{animation:waitPulse 1s ease-in-out infinite}
+@keyframes waitPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,93,143,0)}50%{box-shadow:0 0 0 9px rgba(255,93,143,.45);border-color:#FF2E74}}
+@media (prefers-reduced-motion: reduce){.wait{animation:none;border-style:solid}}
+.cf{width:7px;height:11px;border-radius:1px}
+.popper{width:36px;height:50px;clip-path:polygon(0 0,100% 0,50% 100%);background:repeating-linear-gradient(-30deg,#FFC23C 0 8px,#FF5D8F 8px 16px)}
+.mark{width:300px;height:300px;overflow:visible}
+.mark .d{fill:none;stroke-linecap:round;stroke-dasharray:1 1;stroke-dashoffset:1}
+.gan{width:4px;border-radius:2px;background:#8A93A6}
+.cghost{--c:rgba(255,255,255,.55);border-style:dashed;border-color:var(--accent);box-shadow:none}
+.cghost span{color:var(--accent);text-shadow:none}
+.enc{border:4px solid var(--accent);border-radius:14px;box-shadow:0 0 0 5px rgba(255,93,143,.2)}
+.enclab{background:var(--accent);color:#fff;font:800 14px/1.25 'M PLUS Rounded 1c','Hiragino Maru Gothic ProN',sans-serif;padding:4px 8px;border-radius:9px;white-space:nowrap;text-align:center;width:max-content}
+.enclab::before{content:"";position:absolute;left:-9px;top:50%;transform:translateY(-50%);border:6px solid transparent;border-right:9px solid var(--accent);border-left:0}
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="head">
+    <h1>ひっさんで みる たしざん</h1>
+    <div class="tabs" role="group" aria-label="モード" id="modeTabs">
+      <button data-mode="demo" aria-pressed="true">せつめい</button>
+      <button data-mode="quiz" aria-pressed="false">もんだい</button>
+    </div>
+  </div>
+  <div class="stage-wrap" id="wrap"><div class="stage" id="stage"></div></div>
+  <div class="caption" id="caption" aria-live="polite"></div>
+  <div class="pad" id="pad" hidden>
+    <div class="keys" id="keys">
+      <button data-d="1">1</button><button data-d="2">2</button><button data-d="3">3</button><button data-d="4">4</button><button data-d="5">5</button>
+      <button data-d="6">6</button><button data-d="7">7</button><button data-d="8">8</button><button data-d="9">9</button><button data-d="0">0</button>
+    </div>
+    <div class="padact">
+      <button class="big" id="clearBtn">けす</button>
+      <button class="big ok" id="okBtn">けってい</button>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="big stop" id="stopBtn">ストップ</button>
+    <button class="big" id="replayBtn">もういちど</button>
+    <button class="big" id="nextBtn">つぎの もんだい</button>
+  </div>
+  <div class="opts">
+    <div class="speed" role="group" aria-label="こたえの はんい" id="levelGroup">
+      こたえ
+      <button data-level="1" aria-pressed="true">10〜18</button>
+      <button data-level="2" aria-pressed="false">20〜28</button>
+    </div>
+    <div class="speed" role="group" aria-label="はやさ" id="speedGroup">
+      はやさ
+      <button data-speed="0.6" aria-pressed="false">ゆっくり</button>
+      <button data-speed="1" aria-pressed="true">ふつう</button>
+    </div>
+  </div>
+</main>
+
+<script>
+(function(){
+const W = 360;
+const $ = id => document.getElementById(id);
+const stage = $('stage'), wrap = $('wrap'), captionEl = $('caption'), stopBtn = $('stopBtn');
+const pad = $('pad');
+
+const E = {
+  lin: t => t,
+  out: t => 1 - Math.pow(1 - t, 3),
+  in: t => t * t,
+  inOut: t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2,
+  back: t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3*Math.pow(t-1,3) + c1*Math.pow(t-1,2); },
+  step: t => t < 1 ? 0 : 1
+};
+const DEF = {x:0,y:0,s:1,o:1,r:0,w:0,h:0,f:0,len:0,ang:0,p:1};
+
+let actors = [], dust = [], caps = [];
+let time = 0, playing = false, speed = 1, lastTs = null, lastCap = '';
+let stopAt = Infinity, onStop = null;
+let mode = 'demo', level = 1, cur = null, Z = null;
+
+/* ---------- エンジン ---------- */
+function actor(el, init, kind){
+  if (el) stage.appendChild(el);
+  const a = { el, kind: kind || 'box', kf: [Object.assign({}, DEF, init, {t:0, e:'lin'})] };
+  a.last = () => a.kf[a.kf.length - 1];
+  a.anim = (t1, t2, props, e) => {
+    const L = a.last();
+    t1 = Math.max(t1, L.t); t2 = Math.max(t2, t1);
+    if (t1 > L.t) a.kf.push(Object.assign({}, L, {t:t1, e:'lin'}));
+    a.kf.push(Object.assign({}, a.last(), props, {t:t2, e: e || 'inOut'}));
+    return a;
+  };
+  a.set = (t, props) => a.anim(t, t, props, 'step');
+  actors.push(a);
+  return a;
+}
+function removeActor(a){ const i = actors.indexOf(a); if (i >= 0) actors.splice(i, 1); a.el.remove(); }
+function el(cls, html){ const d = document.createElement('div'); d.className = cls; if (html != null) d.innerHTML = html; return d; }
+function block(txt, cls){ return el('blk ' + cls, '<span>' + txt + '</span>'); }
+function cap(t, text){ caps.push({t, text}); }
+
+function val(a, t){
+  const k = a.kf; let i = 0;
+  while (i + 1 < k.length && k[i+1].t <= t) i++;
+  const A = k[i];
+  if (i + 1 >= k.length) return A;
+  const B = k[i+1];
+  const p = E[B.e]((t - A.t) / (B.t - A.t));
+  const o = {};
+  for (const key in DEF) o[key] = A[key] + (B[key] - A[key]) * p;
+  return o;
+}
+
+function render(t){
+  for (const a of actors){
+    if (a.kind === 'cam'){ const v = val(a, t); applyCam(v.y, v.h); continue; }
+    const v = val(a, t), s = a.el.style;
+    s.opacity = v.o;
+    s.visibility = v.o <= 0.001 ? 'hidden' : 'visible';
+    if (a.kind === 'bar') s.width = v.w + 'px';
+    if (a.kind === 'frame'){ s.width = v.w + 'px'; s.height = v.h + 'px'; }
+    if (a.kind === 'draw'){ const d = a.el.querySelector('.d'); if (d) d.style.strokeDashoffset = 1 - v.p; }
+    s.transform = `translate(${v.x}px,${v.y}px) translate(-50%,-50%) rotate(${v.r}deg) scale(${v.s})`;
+    s.filter = v.f > 0.001 ? `brightness(${1 + v.f * .9})` : '';
+  }
+  for (const d of dust){
+    const dt = t - d.t0, s = d.el.style;
+    if (dt < 0 || dt > d.life){ s.visibility = 'hidden'; continue; }
+    s.visibility = 'visible';
+    if (d.type === 'spark'){
+      const q = (1 - Math.exp(-3.2 * dt)) / 3.2;
+      const tw = (.45 + .55 * Math.abs(Math.sin(dt * 13 + d.ph))) * (1 - dt / d.life);
+      s.opacity = Math.min(1, 2 * (1 - dt / d.life));
+      s.transform = `translate(${d.x0 + d.vx * q}px,${d.y0 + d.vy * q}px) translate(-50%,-50%) rotate(${dt * 120}deg) scale(${d.size / 16 * tw})`;
+      continue;
+    }
+    if (d.type === 'conf'){
+      const q = (1 - Math.exp(-1.8 * dt)) / 1.8;
+      s.opacity = Math.min(1, 3 * (1 - dt / d.life));
+      s.transform = `translate(${d.x0 + d.vx * q + Math.sin(dt * 9 + d.ph) * 6}px,${d.y0 + d.vy * q + 110 * dt * dt}px) translate(-50%,-50%) rotate(${d.rot * dt}deg) scaleX(${Math.cos(dt * 12 + d.ph)})`;
+      continue;
+    }
+    const x = d.x0 + d.vx * dt, y = d.y0 + d.vy * dt + 0.5 * 320 * dt * dt;
+    s.opacity = Math.max(0, 1 - dt / d.life);
+    s.transform = `translate(${x}px,${y}px) translate(-50%,-50%) rotate(${d.rot * dt}deg) scale(${d.size / 8 * (1 - dt / d.life * .5)})`;
+  }
+  let c = '';
+  for (const k of caps) if (k.t <= t) c = k.text;
+  if (c !== lastCap){ captionEl.textContent = c; lastCap = c; }
+}
+
+function rand(a, b){ return a + Math.random() * (b - a); }
+function spawnDust(t0, cx, cy){
+  const colors = ['var(--c-ten)', '#FFFFFF', '#FFE49A', 'var(--c-ten)'];
+  for (let i = 0; i < 40; i++){
+    const d = el('px'); stage.appendChild(d);
+    const x0 = cx + rand(-30, 30), y0 = cy + rand(-10, 30);
+    d.style.background = colors[i % colors.length];
+    dust.push({ type:'dust', el:d, t0: t0 + rand(0, .06), x0, y0, vx:(x0 - cx) * rand(3, 6) + rand(-40, 40), vy: rand(-230, -60), size: rand(5, 12), rot: rand(-500, 500), life: rand(.9, 1.5) });
+  }
+}
+function spawnSparkle(t0, cx, cy, n, spread){
+  const colors = ['#FFE27A', '#FFFFFF', '#FFD23C', '#FFF6C8', '#FF9FC0'];
+  for (let i = 0; i < n; i++){
+    const d = el('spk'); stage.appendChild(d);
+    const ang = (i / n) * Math.PI * 2 + rand(-.3, .3), sp = rand(90, 190) * spread;
+    d.style.background = colors[i % colors.length];
+    dust.push({ type:'spark', el:d, t0: t0 + rand(0, .15), x0: cx, y0: cy, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, size: rand(10, 22), ph: rand(0, 6), life: rand(.8, 1.3) });
+  }
+}
+
+function spawnConfetti(t0, cx, cy, dir){
+  const colors = ['#FF5D8F', '#FFC23C', '#2BB3E8', '#4FBF6A', '#FF8A3D', '#B07CFF'];
+  for (let i = 0; i < 46; i++){
+    const d = el('cf'); stage.appendChild(d);
+    d.style.background = colors[i % colors.length];
+    const ang = (-90 + dir * rand(15, 60)) * Math.PI / 180, sp = rand(380, 720);
+    dust.push({ type:'conf', el:d, t0: t0 + rand(0, .1), x0:cx, y0:cy, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, rot: rand(-600, 600), ph: rand(0, 6), life: rand(1.6, 2.3) });
+  }
+}
+function svgMark(inner){ return '<svg class="mark" viewBox="0 0 300 300">' + inner + '</svg>'; }
+let cam = null, camNow = {y:0, h:470}, availH = 600, maxW = 360;
+function applyCam(y, h){
+  camNow = {y, h};
+  const s = Math.min(maxW / W, availH / h);
+  wrap.style.width = (W * s) + 'px';
+  wrap.style.height = (h * s) + 'px';
+  stage.style.transform = `scale(${s}) translateY(${-y}px)`;
+}
+function clearStage(){
+  if (Z) clearTimeout(Z.hintTO);
+  stage.innerHTML = ''; actors = []; dust = []; caps = []; lastCap = '';
+  time = 0; playing = false; stopAt = Infinity; onStop = null;
+  cam = actor(null, {y:0, h:470}, 'cam');
+}
+function runTo(t, cb){ stopAt = t; onStop = cb || null; playing = true; updateStop(); }
+function nudge(d){ if (stopAt === Infinity){ stopAt = time + d; onStop = null; playing = true; } }
+function updateStop(){
+  const anim = stopAt !== Infinity;
+  stopBtn.disabled = !anim;
+  stopBtn.textContent = (anim && !playing) ? 'つづける' : 'ストップ';
+  stopBtn.classList.toggle('paused', anim && !playing);
+}
+
+/* ---------- 共通の動き ---------- */
+function pikon(act, base, t0){
+  act.anim(t0, t0 + .12, {s:base * 1.18, f:1}, 'out');
+  act.anim(t0 + .12, t0 + .32, {s:base, f:0}, 'in');
+}
+function shake(act, t, x){
+  act.anim(t, t + .07, {x:x - 6}, 'lin').anim(t + .07, t + .14, {x:x + 6}, 'lin')
+     .anim(t + .14, t + .21, {x:x - 6}, 'lin').anim(t + .21, t + .28, {x:x + 6}, 'lin')
+     .anim(t + .28, t + .35, {x}, 'lin');
+}
+function burst(t0, x, y, n){
+  const ring = actor(el('ring'), {x, y, s:.3, o:0});
+  ring.set(t0, {o:1}); ring.anim(t0, t0 + .75, {s:2.4, o:0}, 'out');
+  spawnSparkle(t0, x, y, n, 1);
+}
+function bigQ(c, t0){
+  const cy = c.camY + c.camH / 2;
+  const q = actor(el('bigq', '?'), {x:180, y:cy + 20, s:.8, o:0});
+  q.anim(t0, t0 + .5, {o:.35, s:1.05, y:cy}, 'out');
+  q.anim(t0 + .5, t0 + 1.1, {o:0, s:1.2, y:cy - 30}, 'in');
+  return t0 + 1.2;
+}
+function drop(c, act, x, t0, s){
+  if (!c.qGone){ c.QM.anim(t0, t0 + .3, {o:0, s:.6}); c.qGone = true; }
+  act.anim(t0, t0 + .65, {x, y:c.RES, s: s || 1}, 'in');
+  act.anim(t0 + .65, t0 + .8, {y:c.RES - 8}, 'out');
+  act.anim(t0 + .8, t0 + .95, {y:c.RES}, 'in');
+}
+
+/* ---------- はじまり：よこの しき → ひっさん ---------- */
+function opening(a, b){
+  const ta = Math.floor(a / 10), da = a % 10, two = ta > 0;
+  const c = { a, b, ta, da, two, k:10 - da, r:b - (10 - da), sum:a + b,
+    ONES:180, TENS:104, ROW1: two ? 196 : 220, ROW2:300, LINE:350, RES:410, CARRY_Y:248, REFX:262, qGone:false };
+  c.camY = c.ROW1 - 82; c.camH = 466 - c.camY;
+  const top = two ? {at:38, a:108, p:160, b:212, e:264, q:320} : {a:44, p:104, b:164, e:224, q:292};
+  c.bTop = c.ROW1 - 40; c.bBot = c.RES + 40; c.bY = (c.bTop + c.bBot) / 2; c.bH = c.bBot - c.bTop;
+
+  c.bandT = actor(el('band', '<b>10のくらい</b>'), {x:c.TENS, y:c.bY, w:76, h:c.bH, o:0}, 'frame');
+  c.bandO = actor(el('band', '<b>1のくらい</b>'), {x:c.ONES, y:c.bY, w:76, h:c.bH, o:0}, 'frame');
+  c.glow = actor(el('glow'), {x:139, y:c.RES, o:0});
+  c.Q  = actor(el('qf'), {x:top.q, y:70, s:0, w:64, h:64}, 'frame');
+  c.QM = actor(el('qm', '?'), {x:top.q, y:70, s:0});
+  c.AT = two ? actor(block(ta, 'ca'), {x:top.at, y:70, s:0}) : null;
+  c.A  = actor(block(da, 'ca'), {x:top.a, y:70, s:0});
+  c.P  = actor(el('sym', '+'), {x:top.p, y:70, s:0});
+  c.Bk = actor(block(b, 'cb'), {x:top.b, y:70, s:0});
+  c.E1 = actor(el('bar'), {x:top.e, y:62, w:36, s:0}, 'bar');
+  c.E2 = actor(el('bar'), {x:top.e, y:78, w:36, s:0}, 'bar');
+
+  if (c.AT) c.AT.anim(0, .35, {s:1}, 'back');
+  c.A.anim(.05, .4, {s:1}, 'back');
+  c.P.anim(.1, .45, {s:1}, 'back');
+  c.Bk.anim(.2, .55, {s:1}, 'back');
+  c.E1.anim(.3, .65, {s:1}, 'back'); c.E2.anim(.3, .65, {s:1}, 'back');
+  c.Q.anim(.4, .75, {s:1}, 'back'); c.QM.anim(.4, .75, {s:1}, 'back');
+  cap(0, `${a} + ${b} は いくつ かな？`);
+
+  let t = 1.8;
+  cap(t, 'ひっさんの かたちに ならべるよ');
+  if (c.AT) c.AT.anim(t, t + .9, {x:c.TENS, y:c.ROW1});
+  c.A.anim(t, t + .9, {x:c.ONES, y:c.ROW1}); t += 1.1;
+  c.P.anim(t, t + .8, {x:34, y:c.ROW2}); t += 1.0;
+  c.Bk.anim(t, t + .9, {x:c.ONES, y:c.ROW2}); t += 1.1;
+  c.E1.anim(t, t + .9, {x:68, y:c.LINE, w:110});
+  c.E2.anim(t, t + .9, {x:172, y:c.LINE, w:110});
+  t += 1.1;
+  c.Q.anim(t, t + 1.0, {x:139, y:c.RES, w:180, h:104});
+  c.QM.anim(t, t + 1.0, {x:139, y:c.RES});
+  t += 1.1;
+  // ひっさんに なったら 上へ（大きく 見えるように）
+  cam.anim(t, t + .9, {y:c.camY, h:c.camH});
+  t += 1.0;
+  c.bandT.anim(t, t + .5, {o:1}); c.bandO.anim(t + .1, t + .6, {o:1});
+  t += .8;
+  if (two){ cap(t, '1のくらいから けいさん するよ'); t += 1.3; }
+  c.t = t;
+  return c;
+}
+
+/* 10 に へんしん（20〜28 の ときは 小さい 10 が 下の すき間で まつ） */
+function formTen(c, top, tm, d0, label){
+  d0 = d0 || 0;
+  cap(tm, label || '10 に へんしん！');
+  top.anim(tm, tm + .3, {s:1.28, f:1.3}, 'out');
+  top.set(tm + .42, {o:0});
+  burst(tm + .2, c.ONES, c.ROW1, 22);
+  const T1 = actor(block(1, 'cten'), {x:c.ONES, y:c.ROW1, o:0, s:1.45, f:1.3});
+  const T0 = actor(block(d0, 'cten'), {x:c.ONES, y:c.ROW1, o:0, s:.3});
+  T1.set(tm + .42, {o:1}); T0.set(tm + .52, {o:1});
+  if (c.two){
+    T1.anim(tm + .42, tm + 1.05, {x:c.TENS + 18, y:c.CARRY_Y, s:.5, f:0}, 'back');
+    T0.anim(tm + .52, tm + 1.05, {x:c.ONES - 22, y:c.CARRY_Y, s:.5}, 'back');
+    spawnSparkle(tm + 1.0, (c.TENS + c.ONES) / 2, c.CARRY_Y, 12, .45);
+    if (!label) cap(tm + 1.2, '10 は 1 の したで まってるよ');
+  } else {
+    T1.anim(tm + .42, tm + 1.05, {x:c.TENS, s:1, f:0}, 'back');
+    T0.anim(tm + .52, tm + 1.05, {s:1}, 'back');
+    spawnSparkle(tm + 1.0, c.TENS, c.ROW1, 12, .6);
+    T1.anim(tm + 1.15, tm + 1.35, {f:.7}, 'out'); T1.anim(tm + 1.35, tm + 1.65, {f:0}, 'in');
+  }
+  return {T1, T0};
+}
+
+/* ---------- せつめい（アニメ） ---------- */
+function playDemo(a, b){
+  clearStage(); Z = null; setPad(false);
+  const c = opening(a, b);
+  const {ONES, TENS, ROW1, ROW2, RES, two, da, ta, k, r, sum, A, AT, Bk} = c;
+  let t = c.t, tA, R = null;
+
+  if (r >= 0){
+    // 1) 下の 数を いったん 右へ。たてに ？ の わくを 2つ
+    cap(t, `${b} を 2つに わけるよ`);
+    Bk.anim(t, t + .5, {x:c.REFX, s:.8, o:.6});
+    const s1 = actor(el('slot', '<i>?</i>'), {x:ONES, y:276, o:0, s:.3});
+    const s2 = actor(el('slot', '<i>?</i>'), {x:ONES, y:324, o:0, s:.3});
+    s1.anim(t + .4, t + .75, {o:1, s:1}, 'back');
+    s2.anim(t + .5, t + .85, {o:1, s:1}, 'back');
+    t += 1.3;
+    // 2) 上の 数と 上の ？ を かこんで「10 を つくるよ」
+    const eTop = ROW1 - 42, eBot = 276 + 30;
+    const enc = actor(el('enc'), {x:ONES, y:(eTop + eBot) / 2, w:92, h:eBot - eTop, o:0, s:1.15}, 'frame');
+    enc.anim(t, t + .4, {o:1, s:1}, 'back');
+    const lab = actor(el('enclab', '10を<br>つくるよ'), {x:288, y:ROW1 - 6, o:0, s:.6});
+    lab.anim(t + .2, t + .55, {o:1, s:1}, 'back');
+    pikon(lab, 1, t + .6); pikon(lab, 1, t + 1.0);
+    pikon(enc, 1, t + .6); pikon(enc, 1, t + 1.0);
+    cap(t, '10 を つくるよ');
+    t += 1.8;
+    // 3) ２つに わける（右の 数から ？ の わくへ）
+    cap(t, `${b} を ${k} と ${r} に わけるよ`);
+    const K = actor(block(k, 'cb'), {x:c.REFX, y:ROW2, s:.3, o:0});
+    R = actor(block(r, 'cb'), {x:c.REFX, y:ROW2, s:.3, o:0});
+    K.set(t, {o:1}); K.anim(t, t + .7, {x:ONES, y:276, s:.62}, 'back');
+    R.set(t + .1, {o:1}); R.anim(t + .1, t + .8, {x:ONES, y:324, s:.62}, 'back');
+    s1.anim(t + .6, t + .8, {o:0}); s2.anim(t + .7, t + .9, {o:0});
+    t += 1.6;
+    // 4) 上の ２つを がったい → 10
+    cap(t, `${da} と ${k} で 10！`);
+    pikon(A, 1, t + .2); pikon(K, .62, t + .2);
+    pikon(A, 1, t + .65); pikon(K, .62, t + .65);
+    enc.anim(t + 1.0, t + 1.3, {o:0}); lab.anim(t + 1.0, t + 1.3, {o:0});
+    cap(t + 1.15, `${da} と ${k} が くっつくよ`);
+    K.anim(t + 1.2, t + 1.7, {y:ROW1 + 14, s:.55});
+    K.anim(t + 1.7, t + 1.95, {y:ROW1, s:.2, o:0}, 'in');
+    tA = t + 1.95;
+  } else {
+    cap(t, `${da} は あと ${k} で 10！`);
+    Bk.anim(t, t + .4, {s:.85});
+    pikon(A, 1, t + .5); pikon(Bk, .85, t + .5);
+    pikon(A, 1, t + .95); pikon(Bk, .85, t + .95);
+    cap(t + 1.45, `${da} と ${k} が くっつくよ`);
+    Bk.anim(t + 1.5, t + 2.0, {y:ROW1 + 14, s:.55});
+    Bk.anim(t + 2.0, t + 2.25, {y:ROW1, s:.2, o:0}, 'in');
+    tA = t + 2.25;
+  }
+
+  const {T1, T0} = formTen(c, A, tA);
+  t = tA + 2.1 + (two ? .8 : 0);
+
+  let tenDone = false;
+  if (r === 0){
+    // 合計 10：下の 0 は こなごな → 上の 10 が そのまま 下へ
+    cap(t, 'のこりの 0 は こなごな！');
+    shake(R, t, ONES);
+    R.set(t + .4, {o:0});
+    spawnDust(t + .4, ONES, 324);
+    t += 1.3;
+    if (two){
+      cap(t, '1のくらいは 0 だよ');
+      drop(c, T0, ONES, t);
+      t += 1.5;
+    } else {
+      cap(t, '10 が そのまま 下へ');
+      drop(c, T1, TENS, t); drop(c, T0, ONES, t);
+      t += 1.5;
+      tenDone = true;
+    }
+  } else if (r > 0){
+    cap(t, `のこりの ${r} は 1のくらいへ`);
+    drop(c, R, ONES, t);
+    t += 1.6;
+    cap(t, '10 の 0 が おちて…');
+    const hitY = RES - 66;
+    T0.anim(t, t + .55, {x:ONES, y:hitY, s:1}, 'in');
+    T0.set(t + .56, {o:0});
+    spawnDust(t + .55, ONES, hitY);
+    R.anim(t + .55, t + .65, {y:RES + 6, f:.5}, 'out');
+    R.anim(t + .65, t + .9, {y:RES, f:0}, 'out');
+    cap(t + .55, 'ぶつかって こなごな！');
+    t += 1.8;
+  } else {
+    cap(t, '1のくらいは 0 だよ');
+    drop(c, T0, ONES, t);
+    t += 1.5;
+  }
+
+  if (two){
+    cap(t, `10のくらいは ${ta} と 1 で…`);
+    pikon(AT, 1, t + .2); pikon(T1, .5, t + .2);
+    pikon(AT, 1, t + .65); pikon(T1, .5, t + .65);
+    T1.anim(t + 1.1, t + 1.45, {x:TENS, y:ROW1 + 22, s:.45});
+    T1.anim(t + 1.45, t + 1.7, {y:ROW1, s:.2, o:0}, 'in');
+    const tB = t + 1.7;
+    cap(tB, `${ta + 1} に へんしん！`);
+    AT.anim(tB, tB + .25, {s:1.2, f:1.3}, 'out');
+    AT.set(tB + .35, {o:0});
+    burst(tB + .15, TENS, ROW1, 18);
+    const N = actor(block(ta + 1, 'cten'), {x:TENS, y:ROW1, o:0, s:1.3, f:1.3});
+    N.set(tB + .35, {o:1}); N.anim(tB + .35, tB + .85, {s:1, f:0}, 'back');
+    t = tB + 1.4;
+    cap(t, `10のくらいに ${ta + 1} が おちるよ`);
+    drop(c, N, TENS, t);
+    t += 1.5;
+  } else if (!tenDone){
+    cap(t, '10のくらいに 1 が おちるよ');
+    drop(c, T1, TENS, t);
+    t += 1.5;
+  }
+
+  cap(t, `${c.a} + ${b} = ${sum}`);
+  c.glow.anim(t, t + .4, {o:1});
+  c.Q.anim(t, t + .4, {o:0});
+  runTo(t + 1.0);
+}
+
+/* ---------- もんだい ---------- */
+const SLOT_Y = [276, 324];
+
+function startQuiz(a, b){
+  clearStage(); setPad(false);
+  const c = opening(a, b);
+  Z = { c, T:c.da, B:b, topAct:c.A, botAct:c.Bk, ref:null, phase:'anim', vals:[], vActs:[], slots:[], ghosts:[] };
+  const t = askSplit(c.t);
+  runTo(t, () => enterInput('split'));
+}
+
+// わける 数を 右に ずらして（もとの 数が 見えるように）、たてに ？ の わくを だす
+function askSplit(t){
+  const c = Z.c;
+  if (Z.ref && Z.ref !== Z.botAct) Z.ref.anim(t, t + .35, {o:0});
+  Z.botAct.anim(t, t + .5, {x:c.REFX, y:c.ROW2, s:.8, o:.6});
+  Z.ref = Z.botAct;
+  const s1 = actor(el('slot', '<i>?</i>'), {x:c.ONES, y:SLOT_Y[0], o:0, s:.3});
+  const s2 = actor(el('slot', '<i>?</i>'), {x:c.ONES, y:SLOT_Y[1], o:0, s:.3});
+  s1.anim(t + .3, t + .65, {o:1, s:1}, 'back');
+  s2.anim(t + .4, t + .75, {o:1, s:1}, 'back');
+  Z.slots = [s1, s2];
+  cap(t, `${Z.B} を なにと なにに わける？`);
+  return t + .9;
+}
+
+function waitTargets(){
+  if (!Z) return [];
+  if (Z.phase === 'split') return Z.slots.slice(Z.vals.length);
+  if (Z.phase === 'ans') return Z.vals.length === 0 ? [Z.slotO] : Z.vals.length === 1 ? [Z.slotT] : [];
+  return [];
+}
+function refreshWait(){
+  stage.querySelectorAll('.wait').forEach(e => e.classList.remove('wait'));
+  waitTargets().forEach(a => a && a.el.classList.add('wait'));
+}
+function enterInput(ph){
+  Z.phase = ph; Z.vals = []; Z.vActs = [];
+  setPad(true); refreshWait(); updateStop();
+  if (ph === 'ans') armHint();
+}
+function leaveInput(){
+  Z.phase = 'anim'; setPad(false); clearTimeout(Z.hintTO);
+  stage.querySelectorAll('.wait').forEach(e => e.classList.remove('wait'));
+}
+
+function pressDigit(d){
+  if (!Z || !['split', 'ans'].includes(Z.phase)) return;
+  const c = Z.c;
+  if (Z.phase === 'split'){
+    if (Z.vals.length >= 2) return;
+    const y = SLOT_Y[Z.vals.length];
+    const act = actor(block(d, 'cb'), {x:c.ONES, y, s:.35, o:0});
+    act.set(time, {o:1}); act.anim(time, time + .25, {s:.62}, 'back');
+    Z.vals.push(d); Z.vActs.push(act);
+    refreshWait(); render(time); nudge(.3);
+    return;
+  }
+  // こたえ：1のくらい → 10のくらい の じゅんに
+  if (Z.vals.length === 2){ removeActor(Z.vActs.pop()); Z.vals.pop(); }
+  const isOnes = Z.vals.length === 0;
+  const act = actor(block(d, 'cans'), {x: isOnes ? c.ONES : c.TENS, y:c.RES, s:.5, o:0});
+  act.set(time, {o:1}); act.anim(time, time + .25, {s:1}, 'back');
+  Z.vals.push(d); Z.vActs.push(act);
+  clearGhosts();
+  if (isOnes){
+    const t = time;
+    Z.dimT.anim(t + .1, t + .45, {o:0});
+    Z.dimO.anim(t + .1, t + .45, {o:1});
+    Z.slotT.anim(t + .1, t + .45, {o:1, s:1}, 'back');
+    pikon(Z.slotT, 1, t + .5); pikon(Z.slotT, 1, t + .9);
+    cap(t + .1, '10のくらいは なに？');
+    nudge(1.3);
+  } else nudge(.3);
+  refreshWait(); render(time); armHint();
+}
+function pressClear(){
+  if (!Z || !['split', 'ans'].includes(Z.phase)) return;
+  Z.vActs.forEach(removeActor);
+  const hadTens = Z.phase === 'ans' && Z.vals.length > 0;
+  Z.vals = []; Z.vActs = [];
+  if (hadTens){
+    const t = time;
+    Z.dimO.anim(t, t + .3, {o:0}); Z.dimT.anim(t, t + .3, {o:1});
+    Z.slotT.anim(t, t + .3, {o:0, s:.6});
+    cap(t, '1のくらいは なに？');
+    nudge(.4);
+  }
+  clearGhosts(); refreshWait(); render(time);
+  if (Z.phase === 'ans') armHint();
+}
+function pressOk(){
+  if (!Z || !['split', 'ans'].includes(Z.phase)) return;
+  if (Z.vals.length < 2){
+    cap(time, Z.phase === 'split' ? 'すうじを 2つ えらんでね' : '1のくらいと 10のくらいを えらんでね'); render(time);
+    return;
+  }
+  const ph = Z.phase; leaveInput(); clearGhosts();
+  if (ph === 'split') resolveSplit(); else judge();
+}
+
+/* こたえが 1びょう 入らなかったら ヒント：上の 数が がったいして 下へ（とちゅうで きえる） */
+function clearGhosts(){ (Z && Z.ghosts || []).forEach(removeActor); if (Z) Z.ghosts = []; }
+function armHint(){
+  clearTimeout(Z.hintTO);
+  if (Z.phase !== 'ans' || Z.vals.length >= 2) return;
+  const z = Z;
+  Z.hintTO = setTimeout(() => { if (Z === z) playHint(); }, 1000);
+}
+function playHint(){
+  if (!Z || Z.phase !== 'ans' || Z.vals.length >= 2 || stopAt !== Infinity){ if (Z) armHint(); return; }
+  clearGhosts();
+  const c = Z.c, t = time, ones = Z.vals.length === 0;
+  const src = ones ? Z.hintOnes : Z.hintTens;
+  const tx = ones ? c.ONES : c.TENS;
+  const my = src.reduce((s, p) => s + p.y, 0) / src.length;
+  src.forEach(p => {
+    const g = actor(block(p.d, 'cghost'), {x:p.x, y:p.y, s:p.s, o:0});
+    g.set(t, {o:.75});
+    g.anim(t + .1, t + .55, {x:tx, y:my, s:.6});
+    g.anim(t + .55, t + .65, {o:0});
+    Z.ghosts.push(g);
+  });
+  const q = actor(block('?', 'cghost'), {x:tx, y:my, s:.5, o:0});
+  q.set(t + .55, {o:.8});
+  q.anim(t + .55, t + .7, {s:.9}, 'back');
+  q.anim(t + .75, t + 1.5, {y:c.RES, s:1, o:0}, 'in');
+  Z.ghosts.push(q);
+  nudge(1.6);
+  const z = Z;
+  Z.hintTO = setTimeout(() => { if (Z === z) armHint(); }, 1600 / speed);
+}
+
+function resolveSplit(){
+  const c = Z.c, {ONES, ROW1, ROW2} = c;
+  const [x, y] = Z.vals, [px, py] = Z.vActs, T = Z.T, B = Z.B;
+  let t = time;
+  Z.slots.forEach(s => s.anim(t, t + .3, {o:0}));
+
+  // あわせて B に ならない
+  if (x + y !== B){
+    cap(t, `${x} と ${y} では ${B} に ならないよ`);
+    shake(px, t, ONES); shake(py, t, ONES);
+    px.anim(t + .7, t + 1.0, {o:0}); py.anim(t + .7, t + 1.0, {o:0});
+    t = bigQ(c, t + 1.1);
+    runTo(askSplit(t), () => enterInput('split'));
+    return;
+  }
+
+  // どちらかが 0：0 は ふるえて こなごな、もう一方が また 大きく
+  if (x === 0 || (y === 0 && T + x !== 10)){
+    const zero = x === 0 ? px : py, other = x === 0 ? py : px;
+    const zy = x === 0 ? SLOT_Y[0] : SLOT_Y[1];
+    cap(t, '0 は くっつけられないよ');
+    shake(zero, t + .1, ONES);
+    zero.set(t + .5, {o:0});
+    spawnDust(t + .5, ONES, zy);
+    other.anim(t + .8, t + 1.3, {y:ROW2, s:1}, 'back');
+    Z.botAct = other;
+    t = bigQ(c, t + 1.5);
+    runTo(askSplit(t), () => enterInput('split'));
+    return;
+  }
+
+  // 上と くっつける
+  cap(t, `${T} と ${x} を くっつけるよ`);
+  pikon(Z.topAct, 1, t + .15); pikon(px, .62, t + .15);
+  pikon(Z.topAct, 1, t + .6); pikon(px, .62, t + .6);
+  px.anim(t + 1.05, t + 1.5, {y:ROW1 + 14, s:.55});
+  px.anim(t + 1.5, t + 1.75, {y:ROW1, s:.2, o:0}, 'in');
+  const tm = t + 1.75;
+
+  if (T + x >= 10){
+    // 10 でも 11 いじょうでも そのまま 答えの 入力へ
+    const over = T + x - 10;
+    const {T1, T0} = formTen(c, Z.topAct, tm, over, over ? `${T + x} に なったよ` : null);
+    Z.T1 = T1; Z.T0 = T0; Z.R = py;
+    let tz = 0;
+    if (y === 0){
+      // 合計 10：下の 0 は こなごな
+      const tt = tm + 1.3 + (c.two ? .9 : 0);
+      shake(py, tt, ONES); py.set(tt + .4, {o:0}); spawnDust(tt + .4, ONES, SLOT_Y[1]);
+      cap(tt, 'のこりの 0 は こなごな！');
+      tz = 1.2;
+    }
+    const p0 = c.two ? {x:ONES - 22, y:c.CARRY_Y, s:.5} : {x:ONES, y:ROW1, s:1};
+    const p1 = c.two ? {x:c.TENS + 18, y:c.CARRY_Y, s:.5} : {x:c.TENS, y:ROW1, s:1};
+    Z.hintOnes = y === 0 ? [Object.assign({d:over}, p0)] : [Object.assign({d:over}, p0), {d:y, x:ONES, y:SLOT_Y[1], s:.62}];
+    Z.hintTens = c.two ? [{d:c.ta, x:c.TENS, y:ROW1, s:1}, Object.assign({d:1}, p1)] : [Object.assign({d:1}, p1)];
+    const t2 = tm + 1.5 + (c.two ? .9 : 0) + tz;
+    runTo(askAnswer(t2), () => enterInput('ans'));
+    return;
+  }
+
+  // 10 に ならなかった → 今の じょうたいで もういちど
+  const nv = T + x;
+  Z.topAct.anim(tm, tm + .2, {s:1.2, f:.8}, 'out');
+  Z.topAct.set(tm + .3, {o:0});
+  const NT = actor(block(nv, 'ca'), {x:ONES, y:ROW1, o:0, s:1.2, f:.8});
+  NT.set(tm + .3, {o:1}); NT.anim(tm + .3, tm + .7, {s:1, f:0}, 'back');
+  spawnSparkle(tm + .3, ONES, ROW1, 8, .4);
+  cap(tm + .3, `${nv} に なったね。10 じゃ ないね`);
+  Z.topAct = NT; Z.T = nv;
+  py.anim(tm + .9, tm + 1.4, {y:ROW2, s:1}, 'back');
+  Z.botAct = py; Z.B = y;
+  t = bigQ(c, tm + 1.6);
+  runTo(askSplit(t), () => enterInput('split'));
+}
+
+function askAnswer(t){
+  const c = Z.c;
+  c.QM.anim(t, t + .3, {o:0, s:.6}); c.qGone = true;
+  Z.dimT = actor(el('dim'), {x:c.TENS, y:c.bY, w:78, h:c.bH, o:0}, 'frame');
+  Z.dimO = actor(el('dim'), {x:c.ONES, y:c.bY, w:78, h:c.bH, o:0}, 'frame');
+  Z.dimT.anim(t, t + .4, {o:1});
+  Z.slotO = actor(el('aslot'), {x:c.ONES, y:c.RES, o:0, s:.6});
+  Z.slotT = actor(el('aslot'), {x:c.TENS, y:c.RES, o:0, s:.6});
+  Z.slotO.anim(t, t + .35, {o:1, s:1}, 'back');
+  pikon(Z.slotO, 1, t + .45); pikon(Z.slotO, 1, t + .9);
+  cap(t, '1のくらいは なに？');
+  return t + 1.3;
+}
+function judge(){
+  const c = Z.c, t = time;
+  const [ones, tens] = Z.vals, [onesAct, tensAct] = Z.vActs;
+  const ok = ones === c.sum % 10 && tens === Math.floor(c.sum / 10);
+  const cy = c.camY + c.camH / 2, bottom = c.camY + c.camH;
+  Z.slotO.anim(t, t + .3, {o:0}); Z.slotT.anim(t, t + .3, {o:0});
+  Z.dimO.anim(t, t + .3, {o:0}); Z.dimT.anim(t, t + .3, {o:0});
+  Z.phase = 'done';
+  if (ok){
+    cap(t, 'せいかい！');
+    // りょうがわから クラッカー
+    const pL = actor(el('popper'), {x:30, y:bottom - 26, r:38, s:.3, o:0});
+    const pR = actor(el('popper'), {x:330, y:bottom - 26, r:-38, s:.3, o:0});
+    [pL, pR].forEach(p => { p.set(t, {o:1}); p.anim(t, t + .18, {s:1.25}, 'out'); p.anim(t + .18, t + .4, {s:1}, 'in'); p.anim(t + 2.0, t + 2.4, {o:0}); });
+    spawnConfetti(t + .15, 40, bottom - 46, 1);
+    spawnConfetti(t + .15, 320, bottom - 46, -1);
+    // ◯ を えがく
+    const O = actor(el('', svgMark('<circle class="d" cx="150" cy="150" r="128" pathLength="1" stroke="#FF5D8F" stroke-width="16" transform="rotate(-90 150 150)"/>')), {x:180, y:cy, p:0}, 'draw');
+    O.anim(t + .2, t + .85, {p:1}, 'out');
+    pikon(onesAct, 1, t + .9); pikon(tensAct, 1, t + .9);
+    c.glow.anim(t + .9, t + 1.2, {o:1});
+    c.Q.anim(t + .9, t + 1.2, {o:0});
+    cap(t + 1.2, `せいかい！ ${c.a} + ${c.b} = ${c.sum}`);
+    runTo(t + 2.5);
+  } else {
+    cap(t, 'ざんねん…');
+    shake(onesAct, t, c.ONES); shake(tensAct, t, c.TENS);
+    // 灰色の ✖
+    const X1 = actor(el('', svgMark('<line class="d" x1="50" y1="50" x2="250" y2="250" pathLength="1" stroke="#8A93A6" stroke-width="18"/>')), {x:180, y:cy, p:0}, 'draw');
+    const X2 = actor(el('', svgMark('<line class="d" x1="250" y1="50" x2="50" y2="250" pathLength="1" stroke="#8A93A6" stroke-width="18"/>')), {x:180, y:cy, p:0}, 'draw');
+    X1.anim(t + .15, t + .45, {p:1}, 'out');
+    X2.anim(t + .5, t + .8, {p:1}, 'out');
+    // ガーン の たて線
+    [[10, 230], [22, 170], [34, 110], [326, 110], [338, 170], [350, 230]].forEach(([x, L], i) => {
+      const g = actor(el('gan'), {x, y:c.camY, w:4, h:0}, 'frame');
+      const t0 = t + .6 + (i % 3) * .08;
+      g.anim(t0, t0 + .45, {h:L, y:c.camY + L / 2}, 'out');
+      g.anim(t + 2.2, t + 2.5, {o:0});
+    });
+    cap(t + 1.1, 'よく見てね');
+    runTo(t + 2.6, () => playDemo(c.a, c.b));
+  }
+}
+
+function setPad(on){
+  pad.querySelectorAll('button').forEach(btn => btn.disabled = !on);
+}
+
+/* ---------- 問題えらび・ボタン ---------- */
+function newProblem(){
+  let a, b;
+  do {
+    a = 1 + Math.floor(Math.random() * 9) + (level === 2 ? 10 : 0);
+    b = 1 + Math.floor(Math.random() * 9);
+  } while ((a % 10) + b < 10 || (cur && cur[0] === a && cur[1] === b));
+  cur = [a, b];
+  start();
+}
+function start(){
+  if (mode === 'demo') playDemo(cur[0], cur[1]);
+  else startQuiz(cur[0], cur[1]);
+}
+
+function frame(ts){
+  if (lastTs == null) lastTs = ts;
+  const dt = Math.min(.05, (ts - lastTs) / 1000); lastTs = ts;
+  if (playing){
+    time += dt * speed;
+    if (time >= stopAt){
+      time = stopAt; playing = false; stopAt = Infinity;
+      const cb = onStop; onStop = null;
+      render(time); updateStop();
+      if (cb) cb();
+    } else render(time);
+  }
+  requestAnimationFrame(frame);
+}
+
+stopBtn.addEventListener('click', () => { if (stopAt !== Infinity){ playing = !playing; updateStop(); } });
+$('replayBtn').addEventListener('click', start);
+$('nextBtn').addEventListener('click', newProblem);
+$('keys').addEventListener('click', e => { const b = e.target.closest('button'); if (b) pressDigit(parseInt(b.dataset.d, 10)); });
+$('clearBtn').addEventListener('click', pressClear);
+$('okBtn').addEventListener('click', pressOk);
+function group(id, fn){
+  document.querySelectorAll('#' + id + ' button').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('#' + id + ' button').forEach(x => x.setAttribute('aria-pressed', x === btn ? 'true' : 'false'));
+    fn(btn);
+  }));
+}
+group('speedGroup', btn => { speed = parseFloat(btn.dataset.speed); });
+group('levelGroup', btn => { level = parseInt(btn.dataset.level, 10); newProblem(); });
+group('modeTabs', btn => {
+  mode = btn.dataset.mode;
+  pad.hidden = mode !== 'quiz';
+  document.body.classList.toggle('quiz', mode === 'quiz');
+  fit();
+  newProblem();
+});
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return;
+  if (mode === 'quiz' && /^[0-9]$/.test(e.key)){ pressDigit(parseInt(e.key, 10)); return; }
+  if (mode === 'quiz' && e.key === 'Backspace'){ pressClear(); return; }
+  if (mode === 'quiz' && e.key === 'Enter'){ pressOk(); return; }
+  if (e.code === 'Space' && stopAt !== Infinity){ e.preventDefault(); playing = !playing; updateStop(); }
+});
+
+const app = document.querySelector('.app');
+function fit(){
+  const rs = getComputedStyle(document.documentElement);
+  const vh = window.innerHeight - parseFloat(rs.paddingTop || 0) - parseFloat(rs.paddingBottom || 0);
+  const other = app.offsetHeight - wrap.offsetHeight;
+  maxW = Math.min(app.clientWidth - 24, 480);
+  availH = Math.max(220, vh - other - 4);
+  applyCam(camNow.y, camNow.h);
+}
+window.addEventListener('resize', fit);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', fit);
+fit();
+
+newProblem();
+requestAnimationFrame(frame);
+})();
+
+</script>
+</body>
+</html>
