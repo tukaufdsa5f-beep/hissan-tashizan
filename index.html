@@ -59,7 +59,8 @@ h1{font-family:'Dela Gothic One','Hiragino Sans',sans-serif;font-weight:400;font
 .cq span{color:var(--sub);text-shadow:none}
 .sym{font-family:'Dela Gothic One','Hiragino Sans',sans-serif;font-size:46px;line-height:1;color:var(--ink)}
 .bar{height:8px;border-radius:4px;background:var(--ink)}
-.branch{height:5px;border-radius:3px;background:var(--ink);transform-origin:0 50%}
+.branch{height:4px;border-radius:2px;background:var(--ink);transform-origin:0 50%}
+.mini{font-family:'Dela Gothic One','Hiragino Sans',sans-serif;font-size:18px;line-height:1;color:var(--ink)}
 .band{border-radius:10px;background:var(--band);border:2px dashed rgba(43,179,232,.35)}
 .band b{position:absolute;left:50%;top:-26px;transform:translateX(-50%);white-space:nowrap;font-size:13px;font-weight:800;color:var(--sub)}
 .ring{width:84px;height:84px;border-radius:50%;border:5px solid #FFE27A;box-shadow:0 0 18px #FFD54A,inset 0 0 12px #FFF3B8}
@@ -226,6 +227,11 @@ function render(t){
     const v = val(a, t), s = a.el.style;
     s.opacity = v.o;
     s.visibility = v.o <= 0.001 ? 'hidden' : 'visible';
+    if (a.kind === 'line'){
+      s.width = v.len + 'px';
+      s.transform = `translate(${v.x}px,${v.y}px) translateY(-50%) rotate(${v.ang}rad) scaleX(${v.p})`;
+      continue;
+    }
     if (a.kind === 'bar') s.width = v.w + 'px';
     if (a.kind === 'frame'){ s.width = v.w + 'px'; s.height = v.h + 'px'; }
     if (a.kind === 'draw'){ const d = a.el.querySelector('.d'); if (d) d.style.strokeDashoffset = 1 - v.p; }
@@ -326,6 +332,16 @@ function burst(t0, x, y, n){
   ring.set(t0, {o:1}); ring.anim(t0, t0 + .75, {s:2.4, o:0}, 'out');
   spawnSparkle(t0, x, y, n, 1);
 }
+// さくらんぼ の 線（うすめ）
+function link(x1, y1, x2, y2, t0){
+  const L = actor(el('branch'), {x:x1, y:y1, len:Math.hypot(x2 - x1, y2 - y1), ang:Math.atan2(y2 - y1, x2 - x1), p:0, o:.32}, 'line');
+  L.anim(t0, t0 + .4, {p:1}, 'out');
+  return L;
+}
+function cherry(c, t0){
+  const x1 = c.REFX - 27, x2 = c.ONES + 23;
+  return [link(x1, c.ROW2, x2, c.S1, t0), link(x1, c.ROW2, x2, c.S2, t0 + .1)];
+}
 function bigQ(c, t0){
   const cy = c.camY + c.camH / 2;
   const q = actor(el('bigq', '?'), {x:180, y:cy + 20, s:.8, o:0});
@@ -344,8 +360,9 @@ function drop(c, act, x, t0, s){
 function opening(a, b){
   const ta = Math.floor(a / 10), da = a % 10, two = ta > 0;
   const c = { a, b, ta, da, two, k:10 - da, r:b - (10 - da), sum:a + b,
-    ONES:180, TENS:104, ROW1: two ? 196 : 220, ROW2:300, LINE:350, RES:410, CARRY_Y:248, REFX:262, qGone:false };
-  c.camY = c.ROW1 - 82; c.camH = 466 - c.camY;
+    ONES:180, TENS:104, ROW1: two ? 160 : 200, ROW2:300, LINE:382, RES:444, CARRY_Y:214, REFX:262,
+    P1:248, S1:282, P2:313, S2:344, qGone:false };
+  c.camY = c.ROW1 - 82; c.camH = c.RES + 52 - c.camY;
   const top = two ? {at:38, a:108, p:160, b:212, e:264, q:320} : {a:44, p:104, b:164, e:224, q:292};
   c.bTop = c.ROW1 - 40; c.bBot = c.RES + 40; c.bY = (c.bTop + c.bBot) / 2; c.bH = c.bBot - c.bTop;
 
@@ -385,6 +402,11 @@ function opening(a, b){
   cam.anim(t, t + .9, {y:c.camY, h:c.camH});
   t += 1.0;
   c.bandT.anim(t, t + .5, {o:1}); c.bandO.anim(t + .1, t + .6, {o:1});
+  // たてに ならんだ 数の あいだに 小さな ＋（うすめ）
+  c.plusT = actor(el('mini', '+'), {x:c.TENS, y:c.P1, o:0});
+  c.plusO = actor(el('mini', '+'), {x:c.ONES, y:c.P1, o:0});
+  c.plus2 = actor(el('mini', '+'), {x:c.ONES, y:c.P2, o:0});
+  c.plusT.anim(t, t + .5, {o:.32}); c.plusO.anim(t + .1, t + .6, {o:.32});
   t += .8;
   if (two){ cap(t, '1のくらいから けいさん するよ'); t += 1.3; }
   c.t = t;
@@ -426,37 +448,44 @@ function playDemo(a, b){
     // 1) 下の 数を いったん 右へ。たてに ？ の わくを 2つ
     cap(t, `${b} を 2つに わけるよ`);
     Bk.anim(t, t + .5, {x:c.REFX, s:.8, o:.6});
-    const s1 = actor(el('slot', '<i>?</i>'), {x:ONES, y:276, o:0, s:.3});
-    const s2 = actor(el('slot', '<i>?</i>'), {x:ONES, y:324, o:0, s:.3});
+    const s1 = actor(el('slot', '<i>?</i>'), {x:ONES, y:c.S1, o:0, s:.3});
+    const s2 = actor(el('slot', '<i>?</i>'), {x:ONES, y:c.S2, o:0, s:.3});
+    c.plus2.anim(t + .5, t + .9, {o:.32});
     s1.anim(t + .4, t + .75, {o:1, s:1}, 'back');
     s2.anim(t + .5, t + .85, {o:1, s:1}, 'back');
     t += 1.3;
     // 2) 上の 数と 上の ？ を かこんで「10 を つくるよ」
-    const eTop = ROW1 - 42, eBot = 276 + 30;
+    const eTop = ROW1 - 42, eBot = c.S1 + 30;
     const enc = actor(el('enc'), {x:ONES, y:(eTop + eBot) / 2, w:92, h:eBot - eTop, o:0, s:1.15}, 'frame');
     enc.anim(t, t + .4, {o:1, s:1}, 'back');
-    const lab = actor(el('enclab', '10を<br>つくるよ'), {x:288, y:ROW1 - 6, o:0, s:.6});
+    const lab = actor(el('enclab', '10を<br>つくりたい'), {x:292, y:ROW1 - 6, o:0, s:.6});
     lab.anim(t + .2, t + .55, {o:1, s:1}, 'back');
     pikon(lab, 1, t + .6); pikon(lab, 1, t + 1.0);
     pikon(enc, 1, t + .6); pikon(enc, 1, t + 1.0);
-    cap(t, '10 を つくるよ');
+    cap(t, '10 を つくりたい');
     t += 1.8;
     // 3) ２つに わける（右の 数から ？ の わくへ）
     cap(t, `${b} を ${k} と ${r} に わけるよ`);
     const K = actor(block(k, 'cb'), {x:c.REFX, y:ROW2, s:.3, o:0});
     R = actor(block(r, 'cb'), {x:c.REFX, y:ROW2, s:.3, o:0});
-    K.set(t, {o:1}); K.anim(t, t + .7, {x:ONES, y:276, s:.62}, 'back');
-    R.set(t + .1, {o:1}); R.anim(t + .1, t + .8, {x:ONES, y:324, s:.62}, 'back');
+    K.set(t, {o:1}); K.anim(t, t + .7, {x:ONES, y:c.S1, s:.62}, 'back');
+    R.set(t + .1, {o:1}); R.anim(t + .1, t + .8, {x:ONES, y:c.S2, s:.62}, 'back');
     s1.anim(t + .6, t + .8, {o:0}); s2.anim(t + .7, t + .9, {o:0});
+    const [lk1, lk2] = cherry(c, t + .8);
     t += 1.6;
     // 4) 上の ２つを がったい → 10
     cap(t, `${da} と ${k} で 10！`);
     pikon(A, 1, t + .2); pikon(K, .62, t + .2);
     pikon(A, 1, t + .65); pikon(K, .62, t + .65);
     enc.anim(t + 1.0, t + 1.3, {o:0}); lab.anim(t + 1.0, t + 1.3, {o:0});
+    lk1.anim(t + 1.1, t + 1.4, {o:0});
+    c.lk2 = lk2;
     cap(t + 1.15, `${da} と ${k} が くっつくよ`);
     K.anim(t + 1.2, t + 1.7, {y:ROW1 + 14, s:.55});
     K.anim(t + 1.7, t + 1.95, {y:ROW1, s:.2, o:0}, 'in');
+    // のこりの 数は 上へ つめる（0 と のこりの あいだに ＋）
+    c.plus2.anim(t + 1.95, t + 2.25, {o:0}); lk2.anim(t + 1.95, t + 2.25, {o:0});
+    R.anim(t + 2.0, t + 2.4, {y:c.S1});
     tA = t + 1.95;
   } else {
     cap(t, `${da} は あと ${k} で 10！`);
@@ -476,9 +505,10 @@ function playDemo(a, b){
   if (r === 0){
     // 合計 10：下の 0 は こなごな → 上の 10 が そのまま 下へ
     cap(t, 'のこりの 0 は こなごな！');
+    c.lk2.anim(t, t + .3, {o:0});
     shake(R, t, ONES);
     R.set(t + .4, {o:0});
-    spawnDust(t + .4, ONES, 324);
+    spawnDust(t + .4, ONES, c.S1);
     t += 1.3;
     if (two){
       cap(t, '1のくらいは 0 だよ');
@@ -492,6 +522,7 @@ function playDemo(a, b){
     }
   } else if (r > 0){
     cap(t, `のこりの ${r} は 1のくらいへ`);
+    c.lk2.anim(t, t + .3, {o:0});
     drop(c, R, ONES, t);
     t += 1.6;
     cap(t, '10 の 0 が おちて…');
@@ -539,7 +570,7 @@ function playDemo(a, b){
 }
 
 /* ---------- もんだい ---------- */
-const SLOT_Y = [276, 324];
+const SLOT_Y = [282, 344];
 
 function startQuiz(a, b){
   clearStage(); setPad(false);
@@ -560,6 +591,8 @@ function askSplit(t){
   s1.anim(t + .3, t + .65, {o:1, s:1}, 'back');
   s2.anim(t + .4, t + .75, {o:1, s:1}, 'back');
   Z.slots = [s1, s2];
+  c.plus2.anim(t + .4, t + .8, {o:.32});
+  Z.links = cherry(c, t + .6);
   cap(t, `${Z.B} を なにと なにに わける？`);
   return t + .9;
 }
@@ -676,9 +709,11 @@ function resolveSplit(){
   const [x, y] = Z.vals, [px, py] = Z.vActs, T = Z.T, B = Z.B;
   let t = time;
   Z.slots.forEach(s => s.anim(t, t + .3, {o:0}));
+  Z.links.forEach(l => l.anim(t + .2, t + .5, {o:0}));
 
   // あわせて B に ならない
   if (x + y !== B){
+    c.plus2.anim(t + .7, t + 1.0, {o:0});
     cap(t, `${x} と ${y} では ${B} に ならないよ`);
     shake(px, t, ONES); shake(py, t, ONES);
     px.anim(t + .7, t + 1.0, {o:0}); py.anim(t + .7, t + 1.0, {o:0});
@@ -691,6 +726,7 @@ function resolveSplit(){
   if (x === 0 || (y === 0 && T + x !== 10)){
     const zero = x === 0 ? px : py, other = x === 0 ? py : px;
     const zy = x === 0 ? SLOT_Y[0] : SLOT_Y[1];
+    c.plus2.anim(t + .6, t + .9, {o:0});
     cap(t, '0 は くっつけられないよ');
     shake(zero, t + .1, ONES);
     zero.set(t + .5, {o:0});
@@ -709,6 +745,8 @@ function resolveSplit(){
   px.anim(t + 1.05, t + 1.5, {y:ROW1 + 14, s:.55});
   px.anim(t + 1.5, t + 1.75, {y:ROW1, s:.2, o:0}, 'in');
   const tm = t + 1.75;
+  c.plus2.anim(tm, tm + .3, {o:0});
+  if (T + x >= 10) py.anim(tm + .05, tm + .45, {y:c.S1});
 
   if (T + x >= 10){
     // 10 でも 11 いじょうでも そのまま 答えの 入力へ
@@ -719,13 +757,13 @@ function resolveSplit(){
     if (y === 0){
       // 合計 10：下の 0 は こなごな
       const tt = tm + 1.3 + (c.two ? .9 : 0);
-      shake(py, tt, ONES); py.set(tt + .4, {o:0}); spawnDust(tt + .4, ONES, SLOT_Y[1]);
+      shake(py, tt, ONES); py.set(tt + .4, {o:0}); spawnDust(tt + .4, ONES, c.S1);
       cap(tt, 'のこりの 0 は こなごな！');
       tz = 1.2;
     }
     const p0 = c.two ? {x:ONES - 22, y:c.CARRY_Y, s:.5} : {x:ONES, y:ROW1, s:1};
     const p1 = c.two ? {x:c.TENS + 18, y:c.CARRY_Y, s:.5} : {x:c.TENS, y:ROW1, s:1};
-    Z.hintOnes = y === 0 ? [Object.assign({d:over}, p0)] : [Object.assign({d:over}, p0), {d:y, x:ONES, y:SLOT_Y[1], s:.62}];
+    Z.hintOnes = y === 0 ? [Object.assign({d:over}, p0)] : [Object.assign({d:over}, p0), {d:y, x:ONES, y:c.S1, s:.62}];
     Z.hintTens = c.two ? [{d:c.ta, x:c.TENS, y:ROW1, s:1}, Object.assign({d:1}, p1)] : [Object.assign({d:1}, p1)];
     const t2 = tm + 1.5 + (c.two ? .9 : 0) + tz;
     runTo(askAnswer(t2), () => enterInput('ans'));
